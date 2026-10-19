@@ -3,149 +3,338 @@
 // Memanggil file koneksi database
 require_once '../koneksi.php';
 
+// Memproses perubahan kapasitas ketika form disubmit
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
 
-// Mengecek apakah tombol update sudah ditekan
-if (isset($_POST['update'])) {
+    // Mengambil ID area dan kapasitas baru
+    $id_area = (int) $_POST['id_area'];
+    $kapasitas = (int) $_POST['kapasitas'];
 
-    // Mengambil ID area dari form
-    $id_area = $_POST['id_area'];
+    // Memastikan kapasitas minimal 1
+    if ($kapasitas < 1) {
+        echo "<script>
+            alert('Kapasitas minimal harus 1!');
+            window.history.back();
+        </script>";
+        exit;
+    }
 
-    // Mengambil nama area yang baru
-    $nama_area = $_POST['nama_area'];
-
-    // Mengambil kapasitas yang baru
-    $kapasitas = $_POST['kapasitas'];
-
-    // Mengambil jumlah yang sudah terisi
-    $terisi = $_POST['terisi'];
-
-
-    // Mengubah data area parkir di database
-    $query = mysqli_query(
+    // Mengambil jumlah kendaraan yang sedang terisi
+    $stmt = mysqli_prepare(
         $koneksi,
-        "UPDATE tb_area_parkir SET
-        nama_area='$nama_area',
-        kapasitas='$kapasitas',
-        terisi='$terisi'
-        WHERE id_area='$id_area'"
+        "SELECT terisi FROM tb_area_parkir WHERE id_area = ?"
     );
 
+    mysqli_stmt_bind_param($stmt, "i", $id_area);
+    mysqli_stmt_execute($stmt);
 
-    // Mengecek apakah proses update berhasil
-    if ($query) {
+    $hasil = mysqli_stmt_get_result($stmt);
+    $area = mysqli_fetch_assoc($hasil);
 
-        // Jika berhasil, kembali ke halaman data area parkir
-        header("Location: tampil_area_parkir.php");
+    mysqli_stmt_close($stmt);
 
-        // Menghentikan proses PHP
+    // Memastikan area ditemukan
+    if (!$area) {
+        echo "<script>
+            alert('Data area parkir tidak ditemukan!');
+            window.location='tampil_area_parkir.php';
+        </script>";
         exit;
+    }
 
+    // Kapasitas tidak boleh lebih kecil dari kendaraan yang sedang parkir
+    if ($kapasitas < (int) $area['terisi']) {
+        echo "<script>
+            alert('Kapasitas tidak boleh lebih kecil dari jumlah kendaraan yang sedang parkir!');
+            window.history.back();
+        </script>";
+        exit;
+    }
+
+    // Mengubah kapasitas saja tanpa mengubah nama_area dan terisi
+    $stmt = mysqli_prepare(
+        $koneksi,
+        "UPDATE tb_area_parkir SET kapasitas = ? WHERE id_area = ?"
+    );
+
+    mysqli_stmt_bind_param($stmt, "ii", $kapasitas, $id_area);
+
+    // Menjalankan proses update
+    if (mysqli_stmt_execute($stmt)) {
+        mysqli_stmt_close($stmt);
+
+        header("Location: tampil_area_parkir.php");
+        exit;
     } else {
-
-        // Jika gagal, tampilkan pesan error
-        echo "Data gagal diubah: " . mysqli_error($koneksi);
+        echo "Gagal mengubah kapasitas: " . mysqli_stmt_error($stmt);
+        mysqli_stmt_close($stmt);
+        exit;
     }
 }
 
+// Mengambil ID area dari URL
+if (!isset($_GET['id'])) {
+    echo "<script>
+        alert('ID area tidak ditemukan!');
+        window.location='tampil_area_parkir.php';
+    </script>";
+    exit;
+}
 
-// Mengecek apakah ID dikirim melalui URL
-// Contoh URL: edit_area_parkir.php?id=1
-if (isset($_GET['id'])) {
+$id = (int) $_GET['id'];
 
-    // Mengambil ID dari URL
-    $id = $_GET['id'];
+// Mengambil data area berdasarkan ID
+$stmt = mysqli_prepare(
+    $koneksi,
+    "SELECT id_area, nama_area, kapasitas, terisi
+     FROM tb_area_parkir
+     WHERE id_area = ?"
+);
 
-    // Mengambil data area berdasarkan ID
-    $query = mysqli_query(
-        $koneksi,
-        "SELECT * FROM tb_area_parkir WHERE id_area='$id'"
-    );
+mysqli_stmt_bind_param($stmt, "i", $id);
+mysqli_stmt_execute($stmt);
 
-    // Mengubah hasil query menjadi array
-    $data = mysqli_fetch_assoc($query);
+$hasil = mysqli_stmt_get_result($stmt);
+$data = mysqli_fetch_assoc($hasil);
 
+mysqli_stmt_close($stmt);
+
+// Mengecek apakah data ditemukan
+if (!$data) {
+    echo "<script>
+        alert('Data area parkir tidak ditemukan!');
+        window.location='tampil_area_parkir.php';
+    </script>";
+    exit;
 }
 
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="id">
 
 <head>
 
-    <!-- Judul halaman -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Edit Area Parkir</title>
+
+    <style>
+        /* Mengatur tampilan dasar halaman */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            padding: 35px 18px;
+            background: #f3f5f3;
+            color: #29332d;
+        }
+
+        /* Kotak utama */
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Bagian judul */
+        .form-header {
+            background: #30483a;
+            color: #ffffff;
+            padding: 25px 30px;
+        }
+
+        .form-header h2 {
+            font-size: 24px;
+            margin-bottom: 7px;
+        }
+
+        .form-header p {
+            font-size: 14px;
+            color: #dce6df;
+        }
+
+        /* Bagian formulir */
+        .form-content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d4ddd6;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #29332d;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        input:focus {
+            border-color: #557a62;
+            box-shadow: 0 0 0 3px rgba(85, 122, 98, 0.13);
+        }
+
+        /* Nama area hanya untuk ditampilkan */
+        .readonly {
+            background: #edf1ee;
+            color: #647168;
+            cursor: not-allowed;
+        }
+
+        .form-help {
+            display: block;
+            margin-top: 7px;
+            color: #727d75;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        /* Tombol aksi */
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .btn {
+            flex: 1;
+            display: inline-block;
+            padding: 13px 16px;
+            border: none;
+            border-radius: 8px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-simpan {
+            background: #365b43;
+            color: #ffffff;
+        }
+
+        .btn-simpan:hover {
+            background: #274632;
+        }
+
+        .btn-kembali {
+            background: #e9eeea;
+            color: #34443a;
+        }
+
+        .btn-kembali:hover {
+            background: #dce4de;
+        }
+
+        /* Tampilan perangkat kecil */
+        @media (max-width: 480px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            .form-header {
+                padding: 22px 20px;
+            }
+
+            .form-content {
+                padding: 22px 20px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
 
 </head>
 
 <body>
 
-    <!-- Judul halaman -->
-    <h2>Edit Area Parkir</h2>
+    <div class="form-container">
 
-    <!--
-        Form digunakan untuk mengubah data area parkir.
+        <div class="form-header">
+            <h2>Edit Area Parkir</h2>
+            <p>Ubah kapasitas area parkir sesuai kebutuhan.</p>
+        </div>
 
-        method="POST" berarti data dikirim menggunakan POST.
+        <div class="form-content">
 
-        action="edit_area_parkir.php" berarti data akan
-        dikirim kembali ke file edit_area_parkir.php.
-    -->
-    <form method="POST" action="edit_area_parkir.php">
+            <form method="POST" action="edit_area_parkir.php?id=<?= (int) $data['id_area']; ?>">
 
-        <!--
-            ID area disimpan secara tersembunyi.
+                <!-- ID area disimpan secara tersembunyi -->
+                <input type="hidden" name="id_area" value="<?= (int) $data['id_area']; ?>">
 
-            Hidden berarti input tidak terlihat oleh user,
-            tetapi nilainya tetap dikirim saat form disubmit.
-        -->
-        <input type="hidden" name="id_area" value="<?= $data['id_area']; ?>">
+                <!-- Nama area hanya ditampilkan -->
+                <div class="form-group">
 
-        <!-- Input nama area -->
-        <label>Nama Area</label><br>
+                    <label for="nama_area">Nama Area</label>
 
-        <!--
-            value digunakan untuk menampilkan
-            nama area yang tersimpan di database.
-        -->
-        <input type="text" name="nama_area" value="<?= $data['nama_area']; ?>" required>
+                    <input type="text" id="nama_area" class="readonly"
+                        value="<?= htmlspecialchars($data['nama_area'], ENT_QUOTES, 'UTF-8'); ?>" readonly>
 
-        <br><br>
+                    <span class="form-help">
+                        Nama area tidak dapat diubah melalui halaman ini.
+                    </span>
 
-        <!-- Input kapasitas -->
-        <label>Kapasitas</label><br>
+                </div>
 
-        <!--
-            Menampilkan kapasitas lama dari database.
-        -->
-        <input type="number" name="kapasitas" value="<?= $data['kapasitas']; ?>" required>
+                <!-- Kapasitas yang bisa diedit -->
+                <div class="form-group">
 
-        <br><br>
+                    <label for="kapasitas">Kapasitas Area</label>
 
-        <!-- Input jumlah yang sudah terisi -->
-        <label>Terisi</label><br>
+                    <input type="number" id="kapasitas" name="kapasitas" value="<?= (int) $data['kapasitas']; ?>"
+                        min="<?= max(1, (int) $data['terisi']); ?>" required>
 
-        <!--
-            Menampilkan jumlah terisi lama dari database.
-        -->
-        <input type="number" name="terisi" value="<?= $data['terisi']; ?>" required>
+                    <span class="form-help">
+                        Kapasitas tidak boleh lebih kecil daripada jumlah kendaraan yang sedang parkir.
+                    </span>
 
-        <br><br>
+                </div>
 
-        <!--
-            Tombol untuk menyimpan perubahan.
+                <!-- Kolom Terisi tidak ditampilkan dan tidak diedit -->
 
-            name="update" digunakan untuk mengecek
-            apakah tombol Simpan Perubahan sudah ditekan.
-        -->
-        <button type="submit" name="update">
-            Simpan Perubahan
-        </button>
+                <div class="form-actions">
 
-        <!-- Tombol untuk kembali ke halaman data area parkir -->
-        <a href="tampil_area_parkir.php">Kembali</a>
+                    <a href="tampil_area_parkir.php" class="btn btn-kembali">
+                        Kembali
+                    </a>
 
-    </form>
+                    <button type="submit" name="update" class="btn btn-simpan">
+                        Simpan Perubahan
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
 
 </body>
 
