@@ -27,8 +27,7 @@ require_once '../koneksi.php';
 // CEK LOGIN
 // =========================================================
 
-if (!isset($_SESSION['login'])) {
-
+if (!isset($_SESSION['login']) || !isset($_SESSION['id_user'])) {
     header("Location: ../login.php");
     exit;
 }
@@ -39,7 +38,6 @@ if (!isset($_SESSION['login'])) {
 // =========================================================
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-
     die("Akses tidak valid.");
 }
 
@@ -48,16 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // MENGAMBIL DATA
 // =========================================================
 
-// Mengambil ID parkir dari form checkout
-$id_parkir = isset($_POST['id_parkir'])
-    ? (int) $_POST['id_parkir']
-    : 0;
-
-
-// Mengambil ID user dari session
-$id_user = isset($_SESSION['id_user'])
-    ? (int) $_SESSION['id_user']
-    : 0;
+$id_parkir = (int) ($_POST['id_parkir'] ?? 0);
+$id_user = (int) ($_SESSION['id_user'] ?? 0);
 
 
 // =========================================================
@@ -65,13 +55,10 @@ $id_user = isset($_SESSION['id_user'])
 // =========================================================
 
 if ($id_parkir <= 0) {
-
     die("ID parkir tidak ditemukan.");
 }
 
-
 if ($id_user <= 0) {
-
     die("ID user tidak ditemukan.");
 }
 
@@ -81,7 +68,6 @@ if ($id_user <= 0) {
 // =========================================================
 
 mysqli_begin_transaction($koneksi);
-
 
 try {
 
@@ -97,6 +83,7 @@ try {
             p.waktu_masuk,
             p.id_tarif,
             p.jenis_kendaraan,
+            m.nama_member,
             t.tarif_per_jam
 
         FROM tb_parkir p
@@ -104,38 +91,25 @@ try {
         LEFT JOIN tb_tarif t
             ON p.id_tarif = t.id_tarif
 
+        LEFT JOIN tb_member m
+            ON p.id_member = m.id_member
+
         WHERE p.id_parkir = ?
 
         FOR UPDATE
     ";
 
-
     $stmt = mysqli_prepare($koneksi, $query);
 
-
     if (!$stmt) {
-
-        throw new Exception(
-            "Query data parkir gagal disiapkan."
-        );
+        throw new Exception("Query data parkir gagal disiapkan.");
     }
 
-
-    mysqli_stmt_bind_param(
-        $stmt,
-        "i",
-        $id_parkir
-    );
-
-
+    mysqli_stmt_bind_param($stmt, "i", $id_parkir);
     mysqli_stmt_execute($stmt);
 
-
     $hasil = mysqli_stmt_get_result($stmt);
-
-
     $data = mysqli_fetch_assoc($hasil);
-
 
     mysqli_stmt_close($stmt);
 
@@ -145,10 +119,7 @@ try {
     // =====================================================
 
     if (!$data) {
-
-        throw new Exception(
-            "Data parkir tidak ditemukan."
-        );
+        throw new Exception("Data parkir tidak ditemukan.");
     }
 
 
@@ -158,12 +129,8 @@ try {
 
     $id_area = (int) $data['id_area'];
 
-
     if ($id_area <= 0) {
-
-        throw new Exception(
-            "Area parkir kendaraan tidak ditemukan."
-        );
+        throw new Exception("Area parkir kendaraan tidak ditemukan.");
     }
 
 
@@ -173,12 +140,8 @@ try {
 
     $tarif_per_jam = (int) $data['tarif_per_jam'];
 
-
     if ($tarif_per_jam <= 0) {
-
-        throw new Exception(
-            "Tarif kendaraan tidak ditemukan."
-        );
+        throw new Exception("Tarif kendaraan tidak ditemukan.");
     }
 
 
@@ -190,7 +153,7 @@ try {
 
 
     // =====================================================
-    // WAKTU KELUAR OTOMATIS
+    // WAKTU KELUAR
     // =====================================================
 
     $waktu_keluar = date('Y-m-d H:i:s');
@@ -201,17 +164,11 @@ try {
     // =====================================================
 
     $timestamp_masuk = strtotime($waktu_masuk);
-
     $timestamp_keluar = strtotime($waktu_keluar);
 
-
-    $selisih =
-        $timestamp_keluar -
-        $timestamp_masuk;
-
+    $selisih = $timestamp_keluar - $timestamp_masuk;
 
     if ($selisih < 0) {
-
         $selisih = 0;
     }
 
@@ -220,14 +177,10 @@ try {
     // MENGHITUNG DURASI JAM
     // =====================================================
 
-    $durasi_jam = ceil(
-        $selisih / 3600
-    );
-
+    $durasi_jam = ceil($selisih / 3600);
 
     // Minimal 1 jam
     if ($durasi_jam < 1) {
-
         $durasi_jam = 1;
     }
 
@@ -236,9 +189,7 @@ try {
     // MENGHITUNG TOTAL BIAYA
     // =====================================================
 
-    $biaya_total =
-        $durasi_jam *
-        $tarif_per_jam;
+    $biaya_total = $durasi_jam * $tarif_per_jam;
 
 
     // =====================================================
@@ -247,54 +198,27 @@ try {
 
     $query_cek = "
         SELECT id_transaksi
-
         FROM tb_transaksi
-
         WHERE id_parkir = ?
-
         LIMIT 1
-
         FOR UPDATE
     ";
 
-
-    $stmt_cek = mysqli_prepare(
-        $koneksi,
-        $query_cek
-    );
-
+    $stmt_cek = mysqli_prepare($koneksi, $query_cek);
 
     if (!$stmt_cek) {
-
-        throw new Exception(
-            "Query pengecekan transaksi gagal."
-        );
+        throw new Exception("Query pengecekan transaksi gagal.");
     }
 
-
-    mysqli_stmt_bind_param(
-        $stmt_cek,
-        "i",
-        $id_parkir
-    );
-
-
+    mysqli_stmt_bind_param($stmt_cek, "i", $id_parkir);
     mysqli_stmt_execute($stmt_cek);
 
-
-    $hasil_cek =
-        mysqli_stmt_get_result($stmt_cek);
-
+    $hasil_cek = mysqli_stmt_get_result($stmt_cek);
 
     if (mysqli_num_rows($hasil_cek) > 0) {
-
         mysqli_stmt_close($stmt_cek);
-
-        throw new Exception(
-            "Kendaraan ini sudah melakukan checkout."
-        );
+        throw new Exception("Kendaraan ini sudah melakukan checkout.");
     }
-
 
     mysqli_stmt_close($stmt_cek);
 
@@ -308,46 +232,22 @@ try {
             nama_area,
             kapasitas,
             terisi
-
         FROM tb_area_parkir
-
         WHERE id_area = ?
-
         FOR UPDATE
     ";
 
-
-    $stmt_area = mysqli_prepare(
-        $koneksi,
-        $query_area
-    );
-
+    $stmt_area = mysqli_prepare($koneksi, $query_area);
 
     if (!$stmt_area) {
-
-        throw new Exception(
-            "Query area parkir gagal disiapkan."
-        );
+        throw new Exception("Query area parkir gagal disiapkan.");
     }
 
-
-    mysqli_stmt_bind_param(
-        $stmt_area,
-        "i",
-        $id_area
-    );
-
-
+    mysqli_stmt_bind_param($stmt_area, "i", $id_area);
     mysqli_stmt_execute($stmt_area);
 
-
-    $hasil_area =
-        mysqli_stmt_get_result($stmt_area);
-
-
-    $area =
-        mysqli_fetch_assoc($hasil_area);
-
+    $hasil_area = mysqli_stmt_get_result($stmt_area);
+    $area = mysqli_fetch_assoc($hasil_area);
 
     mysqli_stmt_close($stmt_area);
 
@@ -357,22 +257,16 @@ try {
     // =====================================================
 
     if (!$area) {
-
-        throw new Exception(
-            "Data area parkir tidak ditemukan."
-        );
+        throw new Exception("Data area parkir tidak ditemukan.");
     }
 
 
     // =====================================================
-    // CEK TERISI
+    // CEK JUMLAH KENDARAAN
     // =====================================================
 
     if ((int) $area['terisi'] <= 0) {
-
-        throw new Exception(
-            "Jumlah kendaraan pada area sudah 0."
-        );
+        throw new Exception("Jumlah kendaraan pada area sudah 0.");
     }
 
 
@@ -389,31 +283,14 @@ try {
             biaya_total,
             id_user
         )
-
-        VALUES
-        (
-            ?,
-            ?,
-            ?,
-            ?,
-            ?
-        )
+        VALUES (?, ?, ?, ?, ?)
     ";
 
-
-    $stmt_insert = mysqli_prepare(
-        $koneksi,
-        $query_insert
-    );
-
+    $stmt_insert = mysqli_prepare($koneksi, $query_insert);
 
     if (!$stmt_insert) {
-
-        throw new Exception(
-            "Query transaksi gagal disiapkan."
-        );
+        throw new Exception("Query transaksi gagal disiapkan.");
     }
-
 
     mysqli_stmt_bind_param(
         $stmt_insert,
@@ -425,9 +302,7 @@ try {
         $id_user
     );
 
-
     if (!mysqli_stmt_execute($stmt_insert)) {
-
         throw new Exception(
             "Gagal menyimpan transaksi: " .
             mysqli_stmt_error($stmt_insert)
@@ -439,22 +314,12 @@ try {
     // MENGAMBIL ID TRANSAKSI
     // =====================================================
 
-    $id_transaksi =
-        mysqli_insert_id($koneksi);
-
+    $id_transaksi = mysqli_insert_id($koneksi);
 
     mysqli_stmt_close($stmt_insert);
 
-
-    // =====================================================
-    // CEK ID TRANSAKSI
-    // =====================================================
-
     if ($id_transaksi <= 0) {
-
-        throw new Exception(
-            "ID transaksi tidak berhasil dibuat."
-        );
+        throw new Exception("ID transaksi tidak berhasil dibuat.");
     }
 
 
@@ -464,59 +329,52 @@ try {
 
     $query_update_area = "
         UPDATE tb_area_parkir
-
         SET terisi = terisi - 1
-
         WHERE id_area = ?
-
         AND terisi > 0
     ";
 
-
-    $stmt_update = mysqli_prepare(
-        $koneksi,
-        $query_update_area
-    );
-
+    $stmt_update = mysqli_prepare($koneksi, $query_update_area);
 
     if (!$stmt_update) {
-
-        throw new Exception(
-            "Query update slot gagal disiapkan."
-        );
+        throw new Exception("Query update slot gagal disiapkan.");
     }
 
-
-    mysqli_stmt_bind_param(
-        $stmt_update,
-        "i",
-        $id_area
-    );
-
+    mysqli_stmt_bind_param($stmt_update, "i", $id_area);
 
     if (!mysqli_stmt_execute($stmt_update)) {
-
-        throw new Exception(
-            "Gagal mengurangi jumlah slot."
-        );
+        throw new Exception("Gagal mengurangi jumlah slot.");
     }
 
-
-    if (
-        mysqli_stmt_affected_rows(
-            $stmt_update
-        ) <= 0
-    ) {
-
+    if (mysqli_stmt_affected_rows($stmt_update) <= 0) {
         mysqli_stmt_close($stmt_update);
-
-        throw new Exception(
-            "Kapasitas area tidak berubah."
-        );
+        throw new Exception("Kapasitas area tidak berubah.");
     }
-
 
     mysqli_stmt_close($stmt_update);
+
+
+    // =====================================================
+    // CATAT LOG AKTIVITAS OTOMATIS
+    // =====================================================
+
+    $aktivitas = "Melakukan checkout kendaraan dengan plat nomor " .
+        $data['plat_nomor'] .
+        ", member " .
+        $data['nama_member'] .
+        ", ID transaksi " .
+        $id_transaksi .
+        ", durasi " .
+        $durasi_jam .
+        " jam, total biaya Rp " .
+        number_format($biaya_total, 0, ',', '.') .
+        ", dari area " .
+        $area['nama_area'];
+
+    // Menyimpan log menggunakan akun yang sedang login
+    if (!catatAktivitas($koneksi, $aktivitas)) {
+        throw new Exception("Gagal menyimpan log aktivitas.");
+    }
 
 
     // =====================================================
@@ -530,19 +388,6 @@ try {
     // REDIRECT KE STRUK
     // =====================================================
 
-    /*
-        File ini berada di:
-
-        parkir/simpan_checkout.php
-
-        Sedangkan struk berada di:
-
-        transaksi/cetak_struk.php
-
-        Jadi harus naik satu folder
-        menggunakan ../transaksi/
-    */
-
     header(
         "Location: ../transaksi/cetak_struk.php?id=" .
         $id_transaksi
@@ -553,25 +398,15 @@ try {
 
 } catch (Exception $e) {
 
-
-    // =====================================================
-    // ROLLBACK
-    // =====================================================
-
+    // Membatalkan semua perubahan jika terjadi kesalahan
     mysqli_rollback($koneksi);
-
 
     echo "
         <script>
-
             alert(" .
-        json_encode(
-            $e->getMessage()
-        ) .
+        json_encode($e->getMessage()) .
         ");
-
             window.history.back();
-
         </script>
     ";
 
