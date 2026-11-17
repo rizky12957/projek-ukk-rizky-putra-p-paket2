@@ -27,27 +27,13 @@ require_once '../koneksi.php';
     -->
     <form action="simpan_tarif.php" method="POST">
 
-        <!-- Memilih jenis kendaraan -->
+        <!--
+            Mengisi jenis kendaraan secara manual.
+            Contoh: motor, mobil, truk.
+        -->
         <label>Jenis Kendaraan</label><br>
 
-        <select name="jenis_kendaraan" required>
-
-            <!-- Pilihan awal -->
-            <option value="">
-                -- Pilih Jenis Kendaraan --
-            </option>
-
-            <!-- Pilihan motor -->
-            <option value="motor">
-                Motor
-            </option>
-
-            <!-- Pilihan mobil -->
-            <option value="mobil">
-                Mobil
-            </option>
-
-        </select>
+        <input type="text" name="jenis_kendaraan" placeholder="Contoh: motor, mobil, truk" required>
 
         <br><br>
 
