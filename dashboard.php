@@ -14,7 +14,6 @@ if (session_status() === PHP_SESSION_NONE) {
 // =========================================================
 
 if (!isset($_SESSION['login'])) {
-
     header("Location: login.php");
     exit;
 }
@@ -35,7 +34,6 @@ $role = $_SESSION['role'] ?? '';
 $nama = $_SESSION['nama_lengkap'] ?? 'User';
 $username = $_SESSION['username'] ?? '-';
 
-// Mengambil huruf pertama nama
 $inisial = strtoupper(substr($nama, 0, 1));
 
 
@@ -48,14 +46,12 @@ if (
     $role !== 'petugas' &&
     $role !== 'owner'
 ) {
-
     echo "
         <script>
             alert('Role pengguna tidak valid.');
             window.location='logout.php';
         </script>
     ";
-
     exit;
 }
 
@@ -64,37 +60,25 @@ if (
 // STATISTIK DATABASE
 // =========================================================
 
-
-// =========================================================
 // TOTAL USER
-// =========================================================
-
 $query_user = mysqli_query(
     $koneksi,
     "SELECT COUNT(*) AS total FROM tb_user"
 );
 
-$total_user = mysqli_fetch_assoc($query_user)['total'];
+$total_user = mysqli_fetch_assoc($query_user)['total'] ?? 0;
 
 
-// =========================================================
 // TOTAL MEMBER
-// =========================================================
-
 $query_member = mysqli_query(
     $koneksi,
     "SELECT COUNT(*) AS total FROM tb_member"
 );
 
-$total_member = mysqli_fetch_assoc($query_member)['total'];
+$total_member = mysqli_fetch_assoc($query_member)['total'] ?? 0;
 
 
-// =========================================================
 // KENDARAAN SEDANG PARKIR
-// =========================================================
-// Kendaraan dianggap masih parkir jika
-// belum memiliki transaksi keluar.
-
 $query_parkir = mysqli_query(
     $koneksi,
     "SELECT COUNT(*) AS total
@@ -106,39 +90,30 @@ $query_parkir = mysqli_query(
      )"
 );
 
-$total_parkir = mysqli_fetch_assoc($query_parkir)['total'];
+$total_parkir = mysqli_fetch_assoc($query_parkir)['total'] ?? 0;
 
 
-// =========================================================
 // TOTAL TRANSAKSI
-// =========================================================
-
 $query_transaksi = mysqli_query(
     $koneksi,
     "SELECT COUNT(*) AS total
      FROM tb_transaksi"
 );
 
-$total_transaksi = mysqli_fetch_assoc($query_transaksi)['total'];
+$total_transaksi = mysqli_fetch_assoc($query_transaksi)['total'] ?? 0;
 
 
-// =========================================================
 // TOTAL PENDAPATAN
-// =========================================================
-
 $query_pendapatan = mysqli_query(
     $koneksi,
     "SELECT COALESCE(SUM(biaya_total), 0) AS total
      FROM tb_transaksi"
 );
 
-$total_pendapatan = mysqli_fetch_assoc($query_pendapatan)['total'];
+$total_pendapatan = mysqli_fetch_assoc($query_pendapatan)['total'] ?? 0;
 
 
-// =========================================================
 // KENDARAAN KELUAR HARI INI
-// =========================================================
-
 $query_keluar_hari_ini = mysqli_query(
     $koneksi,
     "SELECT COUNT(*) AS total
@@ -146,13 +121,10 @@ $query_keluar_hari_ini = mysqli_query(
      WHERE DATE(waktu_keluar) = CURDATE()"
 );
 
-$keluar_hari_ini = mysqli_fetch_assoc($query_keluar_hari_ini)['total'];
+$keluar_hari_ini = mysqli_fetch_assoc($query_keluar_hari_ini)['total'] ?? 0;
 
 
-// =========================================================
 // KENDARAAN MASUK HARI INI
-// =========================================================
-
 $query_masuk_hari_ini = mysqli_query(
     $koneksi,
     "SELECT COUNT(*) AS total
@@ -160,13 +132,10 @@ $query_masuk_hari_ini = mysqli_query(
      WHERE DATE(waktu_masuk) = CURDATE()"
 );
 
-$masuk_hari_ini = mysqli_fetch_assoc($query_masuk_hari_ini)['total'];
+$masuk_hari_ini = mysqli_fetch_assoc($query_masuk_hari_ini)['total'] ?? 0;
 
 
-// =========================================================
 // PENDAPATAN HARI INI
-// =========================================================
-
 $query_pendapatan_hari_ini = mysqli_query(
     $koneksi,
     "SELECT COALESCE(SUM(biaya_total), 0) AS total
@@ -176,25 +145,22 @@ $query_pendapatan_hari_ini = mysqli_query(
 
 $pendapatan_hari_ini = mysqli_fetch_assoc(
     $query_pendapatan_hari_ini
-)['total'];
+)['total'] ?? 0;
 
 ?>
 
 <!DOCTYPE html>
-
 <html lang="id">
 
 <head>
 
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>
         Dashboard <?= ucfirst(htmlspecialchars($role)); ?>
         - Sistem Informasi Parkir
     </title>
-
 
     <style>
         /* =====================================================
@@ -227,17 +193,12 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
             position: fixed;
             top: 0;
             left: 0;
-
             width: 250px;
             height: 100vh;
-
             background: #20242b;
             color: white;
-
             padding: 22px 16px;
-
             overflow-y: auto;
-
             transition: 0.3s;
         }
 
@@ -249,49 +210,35 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
         .brand {
             display: flex;
             align-items: center;
-
             gap: 12px;
-
             padding: 10px;
             padding-bottom: 20px;
-
             margin-bottom: 25px;
-
             border-bottom: 1px solid #363b43;
         }
-
 
         .brand-icon {
             width: 45px;
             height: 45px;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
             background: white;
             color: #20242b;
-
             border-radius: 12px;
-
             font-size: 22px;
             font-weight: bold;
         }
-
 
         .brand strong {
             display: block;
             font-size: 18px;
         }
 
-
         .brand small {
             display: block;
-
             color: #9ca3af;
-
             font-size: 12px;
-
             margin-top: 4px;
         }
 
@@ -303,48 +250,33 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
         .sidebar-profile {
             display: flex;
             align-items: center;
-
             gap: 12px;
-
             background: #2b3038;
-
             padding: 13px;
-
             border-radius: 12px;
-
             margin-bottom: 25px;
         }
-
 
         .profile-avatar {
             width: 42px;
             height: 42px;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
             background: white;
             color: #20242b;
-
             border-radius: 50%;
-
             font-weight: bold;
         }
 
-
         .sidebar-profile strong {
             display: block;
-
             font-size: 14px;
-
             margin-bottom: 4px;
         }
 
-
         .sidebar-profile span {
             color: #aeb4bd;
-
             font-size: 12px;
         }
 
@@ -355,66 +287,42 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
         .menu-title {
             color: #858c97;
-
             font-size: 11px;
-
             font-weight: bold;
-
             letter-spacing: 1px;
-
             margin: 22px 10px 9px;
-
             text-transform: uppercase;
         }
-
 
         .menu-item {
             display: flex;
             align-items: center;
-
             gap: 12px;
-
             width: 100%;
-
             padding: 12px 13px;
-
             margin-bottom: 5px;
-
             border-radius: 9px;
-
             color: #cdd1d7;
-
             text-decoration: none;
-
             font-size: 14px;
-
             transition: 0.2s;
         }
 
-
         .menu-item span {
             width: 24px;
-
             text-align: center;
-
             font-size: 16px;
         }
 
-
         .menu-item:hover {
             background: #343a43;
-
             color: white;
-
             transform: translateX(3px);
         }
 
-
         .menu-item.active {
             background: white;
-
             color: #20242b;
-
             font-weight: bold;
         }
 
@@ -425,34 +333,23 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
         .sidebar-bottom {
             margin-top: 25px;
-
             padding-top: 15px;
-
             border-top: 1px solid #363b43;
         }
-
 
         .logout-menu {
             display: flex;
             align-items: center;
-
             gap: 12px;
-
             padding: 12px 13px;
-
             border-radius: 9px;
-
             color: #f1a6a6;
-
             text-decoration: none;
-
             font-size: 14px;
         }
 
-
         .logout-menu:hover {
             background: #642f2f;
-
             color: white;
         }
 
@@ -463,9 +360,7 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
         .main-content {
             margin-left: 250px;
-
             min-height: 100vh;
-
             padding: 30px 35px;
         }
 
@@ -477,77 +372,52 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
         .topbar {
             display: flex;
             align-items: center;
-
             justify-content: space-between;
-
             margin-bottom: 25px;
         }
 
-
         .breadcrumb {
             display: block;
-
             color: #8a919c;
-
             font-size: 13px;
-
             margin-bottom: 5px;
         }
-
 
         .topbar h1 {
             font-size: 28px;
         }
 
-
         .top-user {
             display: flex;
             align-items: center;
-
             gap: 10px;
-
             background: white;
-
             padding: 8px 13px;
-
             border-radius: 12px;
-
             box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
         }
-
 
         .top-avatar {
             width: 38px;
             height: 38px;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
             background: #20242b;
-
             color: white;
-
             border-radius: 50%;
-
             font-weight: bold;
         }
 
-
         .top-user strong {
             display: block;
-
             font-size: 13px;
         }
 
-
         .top-user span {
             display: block;
-
             color: #8a919c;
-
             font-size: 11px;
-
             margin-top: 3px;
         }
 
@@ -559,64 +429,42 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
         .welcome-card {
             display: flex;
             align-items: center;
-
             justify-content: space-between;
-
             background: white;
-
             padding: 30px;
-
             border-radius: 18px;
-
             margin-bottom: 25px;
-
             border: 1px solid #e8eaed;
-
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
         }
 
-
         .welcome-label {
             display: block;
-
             color: #8a919c;
-
             font-size: 11px;
-
             font-weight: bold;
-
             letter-spacing: 1.5px;
-
             margin-bottom: 9px;
         }
 
-
         .welcome-card h2 {
             font-size: 25px;
-
             margin-bottom: 10px;
         }
 
-
         .welcome-card p {
             color: #6b7280;
-
             font-size: 14px;
         }
-
 
         .welcome-icon {
             width: 75px;
             height: 75px;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
             background: #f0f1f3;
-
             border-radius: 20px;
-
             font-size: 35px;
         }
 
@@ -627,58 +475,39 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
         .stats {
             display: grid;
-
             grid-template-columns: repeat(4, 1fr);
-
             gap: 18px;
-
             margin-bottom: 28px;
         }
 
-
         .stat-card {
             background: white;
-
             padding: 22px;
-
             border-radius: 15px;
-
             border: 1px solid #e8eaed;
-
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-
             transition: 0.2s;
         }
 
-
         .stat-card:hover {
             transform: translateY(-4px);
-
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
         }
 
-
         .stat-icon {
             font-size: 25px;
-
             margin-bottom: 15px;
         }
 
-
         .stat-card span {
             display: block;
-
             color: #8a919c;
-
             font-size: 12px;
-
             margin-bottom: 6px;
         }
 
-
         .stat-card strong {
             display: block;
-
             font-size: 23px;
         }
 
@@ -689,38 +518,26 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
         .content-card {
             background: white;
-
             padding: 25px;
-
             border-radius: 17px;
-
             border: 1px solid #e8eaed;
-
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
         }
-
 
         .section-heading {
             margin-bottom: 20px;
         }
 
-
         .section-heading h2 {
             font-size: 20px;
         }
 
-
         .section-label {
             display: block;
-
             color: #8a919c;
-
             font-size: 10px;
-
             font-weight: bold;
-
             letter-spacing: 1.5px;
-
             margin-bottom: 5px;
         }
 
@@ -731,86 +548,58 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
         .quick-menu {
             display: grid;
-
             grid-template-columns: repeat(4, 1fr);
-
             gap: 15px;
         }
-
 
         .quick-card {
             display: flex;
             align-items: center;
-
             gap: 12px;
-
             padding: 17px;
-
             background: #f8f9fa;
-
             border: 1px solid #e9ebee;
-
             border-radius: 12px;
-
             text-decoration: none;
-
             color: #20242b;
-
             transition: 0.2s;
         }
 
-
         .quick-card:hover {
             background: #20242b;
-
             color: white;
-
             transform: translateY(-4px);
         }
-
 
         .quick-icon {
             width: 42px;
             height: 42px;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
             background: white;
-
             border-radius: 10px;
-
             font-size: 19px;
         }
-
 
         .quick-card div:nth-child(2) {
             flex: 1;
         }
 
-
         .quick-card strong {
             display: block;
-
             font-size: 13px;
-
             margin-bottom: 4px;
         }
 
-
         .quick-card span {
             display: block;
-
             color: #8a919c;
-
             font-size: 11px;
         }
 
-
         .quick-card b {
             font-size: 18px;
-
             color: #8a919c;
         }
 
@@ -982,7 +771,6 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
         ====================================================== */
 
         @media (max-width: 1100px) {
-
             .stats {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -990,31 +778,23 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
             .quick-menu {
                 grid-template-columns: repeat(2, 1fr);
             }
-
         }
 
-
         @media (max-width: 700px) {
-
             .sidebar {
                 position: relative;
-
                 width: 100%;
-
                 height: auto;
             }
 
             .main-content {
                 margin-left: 0;
-
                 padding: 20px;
             }
 
             .topbar {
                 flex-direction: column;
-
                 align-items: flex-start;
-
                 gap: 15px;
             }
 
@@ -1029,16 +809,13 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
             .welcome-icon {
                 display: none;
             }
-
         }
     </style>
 
 </head>
 
 
-<!-- =====================================================
-     CLASS ROLE MENENTUKAN WARNA DASHBOARD
-====================================================== -->
+<!-- CLASS ROLE MENENTUKAN WARNA DASHBOARD -->
 
 <body class="role-<?= htmlspecialchars($role); ?>">
 
@@ -1059,13 +836,8 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
             </div>
 
             <div>
-
                 <strong>PARKIR</strong>
-
-                <small>
-                    Sistem Informasi
-                </small>
-
+                <small>Sistem Informasi</small>
             </div>
 
         </div>
@@ -1094,16 +866,13 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
         </div>
 
 
-        <!-- =================================================
-             MENU UTAMA
-        ================================================== -->
+        <!-- MENU UTAMA -->
 
         <nav>
 
             <p class="menu-title">
                 MENU UTAMA
             </p>
-
 
             <a href="dashboard.php" class="menu-item active">
                 <span>⌂</span>
@@ -1113,6 +882,7 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
             <!-- =================================================
                  MENU ADMIN
+                 HANYA 4 MENU
             ================================================== -->
 
             <?php if ($role == 'admin') { ?>
@@ -1121,57 +891,24 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
                     ADMINISTRASI
                 </p>
 
-
-                <!-- DATA USER -->
-
                 <a href="user/tampil_user.php" class="menu-item">
                     <span>👤</span>
                     Data User
                 </a>
-
-
-                <!-- DATA MEMBER -->
 
                 <a href="member/tampil_member.php" class="menu-item">
                     <span>👥</span>
                     Data Member
                 </a>
 
-
-                <!-- AREA PARKIR -->
-
                 <a href="area/tampil_area_parkir.php" class="menu-item">
                     <span>▦</span>
                     Area Parkir
                 </a>
 
-
-                <!-- DATA TARIF -->
-
                 <a href="tarif/tampil_tarif.php" class="menu-item">
                     <span>Rp</span>
                     Data Tarif
-                </a>
-
-
-                <p class="menu-title">
-                    PARKIR
-                </p>
-
-
-                <!-- TRANSAKSI: SATU MENU UNTUK MELIHAT RIWAYAT TRANSAKSI -->
-
-                <a href="transaksi/tampil_transaksi.php" class="menu-item">
-                    <span>▤</span>
-                    Transaksi
-                </a>
-
-
-                <!-- LOG AKTIVITAS -->
-
-                <a href="log_aktivitas/tampil_log_aktivitas.php" class="menu-item">
-                    <span>◉</span>
-                    Log Aktivitas
                 </a>
 
             <?php } ?>
@@ -1179,7 +916,6 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
             <!-- =================================================
                  MENU PETUGAS
-                 HANYA DATA PARKIR
             ================================================== -->
 
             <?php if ($role == 'petugas') { ?>
@@ -1188,14 +924,10 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
                     OPERASIONAL
                 </p>
 
-
-                <!-- DATA PARKIR -->
-
                 <a href="parkir/tampil_parkir.php" class="menu-item">
                     <span>🚗</span>
                     Data Parkir
                 </a>
-
 
             <?php } ?>
 
@@ -1210,16 +942,10 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
                     INFORMASI
                 </p>
 
-
-                <!-- TRANSAKSI: MENAMPILKAN SELURUH RIWAYAT TRANSAKSI -->
-
                 <a href="transaksi/tampil_transaksi.php" class="menu-item">
                     <span>▤</span>
                     Transaksi
                 </a>
-
-
-                <!-- LOG AKTIVITAS -->
 
                 <a href="log_aktivitas/tampil_log_aktivitas.php" class="menu-item">
                     <span>◉</span>
@@ -1231,15 +957,15 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
         </nav>
 
 
-        <!-- =================================================
-             LOGOUT
-        ================================================== -->
+        <!-- LOGOUT -->
 
         <div class="sidebar-bottom">
 
             <a href="logout.php" class="logout-menu" onclick="return confirm('Yakin ingin logout?')">
+
                 <span>↪</span>
                 Logout
+
             </a>
 
         </div>
@@ -1269,7 +995,6 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
                 </h1>
 
             </div>
-
 
             <div class="top-user">
 
@@ -1314,8 +1039,8 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
                     </h2>
 
                     <p>
-                        Kelola pengguna, member, area, tarif,
-                        parkir, transaksi dan aktivitas sistem.
+                        Kelola data pengguna, member, area parkir,
+                        dan tarif kendaraan pada sistem parkir.
                     </p>
 
 
@@ -1352,17 +1077,11 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
                 <?php
 
                 if ($role == 'admin') {
-
                     echo "⚙️";
-
                 } elseif ($role == 'petugas') {
-
                     echo "🚗";
-
                 } else {
-
                     echo "📊";
-
                 }
 
                 ?>
@@ -1379,7 +1098,6 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
         <?php if ($role == 'admin') { ?>
 
             <section class="stats">
-
 
                 <!-- TOTAL USER -->
 
@@ -1437,11 +1155,10 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
                 </div>
 
-
-
-
             </section>
 
+
+            <!-- AKSES CEPAT ADMIN -->
 
             <section class="content-card">
 
@@ -1461,7 +1178,7 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
                 <div class="quick-menu">
 
 
-                    <!-- USER -->
+                    <!-- DATA USER -->
 
                     <a href="user/tampil_user.php" class="quick-card">
 
@@ -1481,14 +1198,12 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
                         </div>
 
-                        <b>
-                            →
-                        </b>
+                        <b>→</b>
 
                     </a>
 
 
-                    <!-- MEMBER -->
+                    <!-- DATA MEMBER -->
 
                     <a href="member/tampil_member.php" class="quick-card">
 
@@ -1508,14 +1223,12 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
                         </div>
 
-                        <b>
-                            →
-                        </b>
+                        <b>→</b>
 
                     </a>
 
 
-                    <!-- AREA -->
+                    <!-- AREA PARKIR -->
 
                     <a href="area/tampil_area_parkir.php" class="quick-card">
 
@@ -1535,14 +1248,12 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
                         </div>
 
-                        <b>
-                            →
-                        </b>
+                        <b>→</b>
 
                     </a>
 
 
-                    <!-- TARIF -->
+                    <!-- DATA TARIF -->
 
                     <a href="tarif/tampil_tarif.php" class="quick-card">
 
@@ -1562,14 +1273,9 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
                         </div>
 
-                        <b>
-                            →
-                        </b>
+                        <b>→</b>
 
                     </a>
-
-
-
 
                 </div>
 
@@ -1585,7 +1291,6 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
         <?php if ($role == 'petugas') { ?>
 
             <section class="stats">
-
 
                 <!-- SEDANG PARKIR -->
 
@@ -1643,11 +1348,10 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
                 </div>
 
-
-
-
             </section>
 
+
+            <!-- AKSES CEPAT PETUGAS -->
 
             <section class="content-card">
 
@@ -1665,9 +1369,6 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
 
                 <div class="quick-menu">
-
-
-                    <!-- DATA PARKIR -->
 
                     <a href="parkir/tampil_parkir.php" class="quick-card">
 
@@ -1687,14 +1388,9 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
                         </div>
 
-                        <b>
-                            →
-                        </b>
+                        <b>→</b>
 
                     </a>
-
-
-                    
 
                 </div>
 
@@ -1710,9 +1406,6 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
         <?php if ($role == 'owner') { ?>
 
             <section class="stats">
-
-
-
 
 
                 <!-- TOTAL PENDAPATAN -->
@@ -1774,6 +1467,8 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
             </section>
 
 
+            <!-- INFORMASI PENDAPATAN OWNER -->
+
             <section class="content-card">
 
                 <div class="section-heading">
@@ -1812,14 +1507,9 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
                         </div>
 
-                        <b>
-                            →
-                        </b>
+                        <b>→</b>
 
                     </a>
-
-
-
 
 
                     <!-- LOG AKTIVITAS -->
@@ -1842,9 +1532,7 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
                         </div>
 
-                        <b>
-                            →
-                        </b>
+                        <b>→</b>
 
                     </a>
 
@@ -1883,7 +1571,6 @@ $pendapatan_hari_ini = mysqli_fetch_assoc(
 
 
     </main>
-
 
 </body>
 
