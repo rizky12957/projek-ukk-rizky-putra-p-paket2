@@ -7,7 +7,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Mengambil data dari form
     $id_member = $_POST['id_member'];
-    $nama_member = $_POST['nama_member'];
+    $nama_member = trim($_POST['nama_member'] ?? '');
+    $plat_nomor = strtoupper(trim($_POST['plat_nomor'] ?? ''));
     $jenis_kelamin = $_POST['jenis_kelamin'];
     $no_hp = $_POST['no_hp'];
     $tanggal_daftar = $_POST['tanggal_daftar'];
@@ -21,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Query update tanpa mengubah id_area
     $query = "UPDATE tb_member SET
         nama_member = ?,
+        plat_nomor = ?,
         jenis_kelamin = ?,
         no_hp = ?,
         tanggal_daftar = ?,
@@ -38,8 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Menghubungkan parameter dengan query
     mysqli_stmt_bind_param(
         $stmt,
-        "sssssii",
+        "ssssssii",
         $nama_member,
+        $plat_nomor,
         $jenis_kelamin,
         $no_hp,
         $tanggal_daftar,
@@ -280,6 +283,14 @@ if (!$query_user) {
                     <input type="text" id="nama_member" name="nama_member"
                         value="<?= htmlspecialchars($member['nama_member'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
                         placeholder="Masukkan nama member" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="plat_nomor">Plat Nomor Kendaraan</label>
+                    <input type="text" id="plat_nomor" name="plat_nomor"
+                        value="<?= htmlspecialchars($member['plat_nomor'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                        placeholder="Contoh: D 1234 ABC" maxlength="15"
+                        style="text-transform: uppercase;" required>
                 </div>
 
                 <div class="form-group">

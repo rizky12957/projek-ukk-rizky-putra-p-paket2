@@ -41,9 +41,13 @@ if (empty($id_user_login)) {
 
 $query_member = mysqli_query(
     $koneksi,
-    "SELECT * FROM tb_member
-     WHERE status_aktif = 'aktif'
-     ORDER BY nama_member ASC"
+    "SELECT
+        m.id_member,
+        m.nama_member,
+        m.plat_nomor
+     FROM tb_member m
+     WHERE m.status_aktif = 'aktif'
+     ORDER BY m.nama_member ASC"
 );
 
 // =========================================================
@@ -226,12 +230,16 @@ $query_area = mysqli_query(
                 <!-- MEMBER -->
                 <label for="id_member">Member</label>
 
-                <select name="id_member" id="id_member" required>
+                <select name="id_member" id="id_member" required onchange="isiPlatMember()">
                     <option value="">-- Pilih Member --</option>
 
                     <?php while ($member = mysqli_fetch_assoc($query_member)) { ?>
-                        <option value="<?= htmlspecialchars($member['id_member']); ?>">
+                        <option
+                            value="<?= (int) $member['id_member']; ?>"
+                            data-plat="<?= htmlspecialchars($member['plat_nomor'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                        >
                             <?= htmlspecialchars($member['nama_member']); ?>
+                            — <?= htmlspecialchars($member['plat_nomor'] ?: 'Plat belum tersimpan'); ?>
                         </option>
                     <?php } ?>
                 </select>
@@ -286,7 +294,7 @@ $query_area = mysqli_query(
                 </select>
 
                 <!-- TARIF OTOMATIS -->
-                <label for="tampilan_tarif">Tarif Per Jam</label>
+                <label for="tampilan_tarif">Tarif Tetap per Sesi Parkir</label>
 
                 <input type="text" id="tampilan_tarif" placeholder="Tarif otomatis" readonly>
 
@@ -320,6 +328,20 @@ $query_area = mysqli_query(
 
     <!-- JAVASCRIPT TARIF OTOMATIS -->
     <script>
+        // Mengisi plat nomor otomatis berdasarkan member yang dipilih.
+        // Plat masih bisa diedit jika member membawa kendaraan berbeda.
+        function isiPlatMember() {
+            const pilihan = document.getElementById("id_member");
+            const platNomor = document.getElementById("plat_nomor");
+            const option = pilihan.options[pilihan.selectedIndex];
+
+            if (option && option.dataset.plat) {
+                platNomor.value = option.dataset.plat;
+            } else {
+                platNomor.value = "";
+            }
+        }
+
         function ubahTarif() {
 
             const jenis = document.getElementById("jenis_kendaraan").value;
@@ -329,19 +351,19 @@ $query_area = mysqli_query(
             // Menentukan tarif berdasarkan jenis kendaraan
             const daftarTarif = {
                 motor: {
-                    harga: "Rp 3.000 / jam",
+                    harga: "Rp 3.000 / sekali parkir",
                     id: "1"
                 },
                 mobil: {
-                    harga: "Rp 5.000 / jam",
+                    harga: "Rp 5.000 / sekali parkir",
                     id: "2"
                 },
                 truk: {
-                    harga: "Rp 8.000 / jam",
+                    harga: "Rp 8.000 / sekali parkir",
                     id: "3"
                 },
                 bus: {
-                    harga: "Rp 9.000 / jam",
+                    harga: "Rp 9.000 / sekali parkir",
                     id: "4"
                 }
             };

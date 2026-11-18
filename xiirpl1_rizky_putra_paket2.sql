@@ -78,6 +78,7 @@ INSERT INTO `tb_log_aktivitas` (`id_log`, `id_user`, `aktivitas`, `waktu_aktivit
 CREATE TABLE `tb_member` (
   `id_member` int(11) NOT NULL,
   `nama_member` varchar(100) NOT NULL,
+  `plat_nomor` varchar(15) DEFAULT NULL,
   `jenis_kelamin` enum('L','P') NOT NULL,
   `no_hp` varchar(20) DEFAULT NULL,
   `tanggal_daftar` date NOT NULL,
@@ -90,9 +91,9 @@ CREATE TABLE `tb_member` (
 -- Dumping data untuk tabel `tb_member`
 --
 
-INSERT INTO `tb_member` (`id_member`, `nama_member`, `jenis_kelamin`, `no_hp`, `tanggal_daftar`, `status_aktif`, `id_user`, `id_area`) VALUES
-(10, 'Rizky Putra', 'L', '08897654321', '2026-10-19', 'aktif', 1, NULL),
-(11, 'Fandi Septia', 'P', '0876954321', '2026-10-19', 'aktif', 1, NULL);
+INSERT INTO `tb_member` (`id_member`, `nama_member`, `plat_nomor`, `jenis_kelamin`, `no_hp`, `tanggal_daftar`, `status_aktif`, `id_user`, `id_area`) VALUES
+(10, 'Rizky Putra', NULL, 'L', '08897654321', '2026-10-19', 'aktif', 1, NULL),
+(11, 'Fandi Septia', NULL, 'P', '0876954321', '2026-10-19', 'aktif', 1, NULL);
 
 -- --------------------------------------------------------
 

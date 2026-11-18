@@ -166,6 +166,10 @@ $query = mysqli_query(
                 </th>
 
                 <th>
+                    Plat Nomor
+                </th>
+
+                <th>
                     Jenis Kelamin
                 </th>
 
@@ -236,6 +240,15 @@ $query = mysqli_query(
 
                         </strong>
 
+                    </td>
+
+
+                    <!-- ======================================
+                         PLAT NOMOR KENDARAAN
+                    ======================================= -->
+
+                    <td>
+                        <strong><?= htmlspecialchars($member['plat_nomor'] ?? '-'); ?></strong>
                     </td>
 
 

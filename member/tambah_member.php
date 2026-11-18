@@ -62,6 +62,26 @@ $nama_user = $_SESSION['nama_lengkap']
                     maxlength="100" required>
             </div>
 
+            <!-- PLAT NOMOR KENDARAAN MEMBER -->
+            <div class="form-group">
+                <label for="plat_nomor">
+                    Plat Nomor Kendaraan <span class="required">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="plat_nomor"
+                    name="plat_nomor"
+                    placeholder="Contoh: D 1234 ABC"
+                    maxlength="15"
+                    style="text-transform: uppercase;"
+                    required
+                >
+                <span class="form-help">
+                    Masukkan nomor polisi kendaraan yang didaftarkan sebagai member.
+                </span>
+            </div>
+
             <!-- JENIS KELAMIN -->
             <div class="form-group">
                 <label for="jenis_kelamin">

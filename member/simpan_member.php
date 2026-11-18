@@ -47,6 +47,7 @@ $id_user = (int) $id_user;
 // =========================================================
 
 $nama_member = trim($_POST['nama_member'] ?? '');
+$plat_nomor = strtoupper(trim($_POST['plat_nomor'] ?? ''));
 $jenis_kelamin = $_POST['jenis_kelamin'] ?? '';
 $no_hp = trim($_POST['no_hp'] ?? '');
 $tanggal_daftar = $_POST['tanggal_daftar'] ?? date('Y-m-d');
@@ -59,6 +60,7 @@ $status_aktif = $_POST['status_aktif'] ?? 'aktif';
 
 if (
     $nama_member === '' ||
+    $plat_nomor === '' ||
     !in_array($jenis_kelamin, ['L', 'P'], true) ||
     !in_array($status_aktif, ['aktif', 'suspended'], true)
 ) {
@@ -81,6 +83,7 @@ if (!$tanggal || $tanggal->format('Y-m-d') !== $tanggal_daftar) {
 $query = "INSERT INTO tb_member
     (
         nama_member,
+        plat_nomor,
         jenis_kelamin,
         no_hp,
         tanggal_daftar,
@@ -88,7 +91,7 @@ $query = "INSERT INTO tb_member
         id_user,
         id_area
     )
-    VALUES (?, ?, ?, ?, ?, ?, NULL)";
+    VALUES (?, ?, ?, ?, ?, ?, ?, NULL)";
 
 $stmt = mysqli_prepare($koneksi, $query);
 
@@ -100,8 +103,9 @@ if (!$stmt) {
 // Menghubungkan data dengan query.
 mysqli_stmt_bind_param(
     $stmt,
-    "sssssi",
+    "ssssssi",
     $nama_member,
+    $plat_nomor,
     $jenis_kelamin,
     $no_hp,
     $tanggal_daftar,
@@ -125,7 +129,7 @@ if (mysqli_stmt_execute($stmt)) {
     // =====================================================
 
     // Mencatat nama member yang baru ditambahkan.
-    $aktivitas = "Menambahkan member baru bernama " . $nama_member;
+    $aktivitas = "Menambahkan member baru bernama " . $nama_member . " dengan plat nomor " . $plat_nomor;
 
     // Menyimpan aktivitas ke tb_log_aktivitas.
     catatAktivitas($koneksi, $aktivitas);

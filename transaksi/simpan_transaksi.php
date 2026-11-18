@@ -75,10 +75,13 @@ try {
             p.id_parkir,
             p.plat_nomor,
             p.jenis_kendaraan,
-            m.nama_member
+            m.nama_member,
+            tr.tarif_per_jam
         FROM tb_parkir p
         LEFT JOIN tb_member m
             ON p.id_member = m.id_member
+        LEFT JOIN tb_tarif tr
+            ON p.id_tarif = tr.id_tarif
         WHERE p.id_parkir = ?
         FOR UPDATE
     ";
@@ -104,6 +107,12 @@ try {
 
     if (!$parkir) {
         throw new Exception("Data parkir tidak ditemukan.");
+    }
+
+    // Biaya satu kali parkir: tidak dikalikan jumlah jam.
+    $biaya_total = (float) $parkir['tarif_per_jam'];
+    if ($biaya_total <= 0) {
+        throw new Exception("Tarif kendaraan tidak ditemukan.");
     }
 
 

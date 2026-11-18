@@ -124,6 +124,7 @@ $query = mysqli_query(
         p.plat_nomor,
         p.warna_kendaraan,
         p.jenis_kendaraan,
+        m.nama_member,
         p.waktu_masuk,
         t.waktu_keluar,
         t.durasi_jam,
@@ -137,6 +138,9 @@ $query = mysqli_query(
 
     LEFT JOIN tb_user u
         ON t.id_user = u.id_user
+
+    LEFT JOIN tb_member m
+        ON p.id_member = m.id_member
 
     $where
 
@@ -256,6 +260,17 @@ if (!$query) {
         <?php } ?>
 
 
+        <?php if ($role === 'owner') { ?>
+            <div style="margin: 0 0 18px;">
+                <a href="cetak_laporan.php?filter=<?= urlencode($filter); ?>"
+                   target="_blank"
+                   class="btn">
+                    🖨 Cetak Laporan Transaksi
+                </a>
+            </div>
+        <?php } ?>
+
+
         <!-- =====================================================
          FILTER TRANSAKSI
     ====================================================== -->
@@ -341,6 +356,10 @@ if (!$query) {
                 <th>
                     User
                 </th>
+
+                <?php if ($role === 'owner') { ?>
+                    <th>Aksi</th>
+                <?php } ?>
 
             </tr>
 
@@ -439,12 +458,17 @@ if (!$query) {
 
                         <!-- User -->
                         <td>
-
-                            <?= htmlspecialchars(
-                                $data['nama_lengkap'] ?? '-'
-                            ); ?>
-
+                            <?= htmlspecialchars($data['nama_lengkap'] ?? '-'); ?>
                         </td>
+
+                        <?php if ($role === 'owner') { ?>
+                            <td>
+                                <a href="cetak_struk.php?id=<?= (int) $data['id_transaksi']; ?>"
+                                   target="_blank" class="edit">
+                                    Cetak Struk
+                                </a>
+                            </td>
+                        <?php } ?>
 
                     </tr>
 
@@ -458,7 +482,7 @@ if (!$query) {
 
                 <tr>
 
-                    <td colspan="9" style="text-align:center;">
+                    <td colspan="<?= $role === 'owner' ? 10 : 9; ?>" style="text-align:center;">
                         Belum ada data transaksi.
                     </td>
 

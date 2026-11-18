@@ -63,6 +63,7 @@ $query = mysqli_prepare(
         p.jenis_kendaraan,
         p.waktu_masuk,
 
+        m.nama_member,
         a.nama_area,
 
         tr.tarif_per_jam,
@@ -73,6 +74,9 @@ $query = mysqli_prepare(
 
     INNER JOIN tb_parkir p
         ON t.id_parkir = p.id_parkir
+
+    LEFT JOIN tb_member m
+        ON p.id_member = m.id_member
 
     LEFT JOIN tb_area_parkir a
         ON p.id_area = a.id_area
@@ -493,6 +497,13 @@ mysqli_stmt_close($query);
         </div>
 
 
+        <div class="row">
+            <span class="label">Member</span>
+            <span class="value">
+                <?= htmlspecialchars($data['nama_member'] ?? 'Non-member'); ?>
+            </span>
+        </div>
+
         <!-- =====================================================
          JENIS KENDARAAN
     ====================================================== -->
@@ -626,7 +637,7 @@ mysqli_stmt_close($query);
         <div class="row">
 
             <span class="label">
-                Tarif / Jam
+                Tarif Tetap
             </span>
 
             <span class="value">

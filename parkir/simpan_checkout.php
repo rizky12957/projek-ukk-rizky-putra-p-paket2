@@ -189,7 +189,9 @@ try {
     // MENGHITUNG TOTAL BIAYA
     // =====================================================
 
-    $biaya_total = $durasi_jam * $tarif_per_jam;
+    // Tarif dibayar satu kali untuk satu sesi parkir.
+    // Durasi tetap dicatat, tetapi tidak mengalikan biaya.
+    $biaya_total = $tarif_per_jam;
 
 
     // =====================================================
